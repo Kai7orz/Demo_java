@@ -13,22 +13,19 @@ public class DemoApplication {
 		SpringApplication.run(DemoApplication.class, args);}
 
 	@GetMapping("/hello")
-	public int getDemo() {
+	public String getDemo() {
 		enum Answer {
 			YES,
 			NEUTRAL,
-			NO
+			NOA
 		}
 		Answer a;
-		a = Answer.NEUTRAL;
-		System.out.println("Answer is "+a);
-		var array = new int[100];
-		int testNumber = 100;
-		return testNumber;
+		a = Answer.NEUTRAL;;
+		return "hello";
 	}
 }
 
-public class SixMessages5 {
+class SixMessages5 {
 	static void message(int n) {
 		for(int i=0; i < n; i++) {
 			System.out.println("Helllo .");
