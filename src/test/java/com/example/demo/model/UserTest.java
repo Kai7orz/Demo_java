@@ -1,7 +1,6 @@
 package com.example.demo.model;
 
 import com.example.demo.infrastructure.UserInMemoryRepository;
-import com.example.demo.usecase.user.UserRegisterService;
 import com.example.demo.usecase.user.interfaces.UserRepository;
 import org.junit.jupiter.api.Test;
 
@@ -20,5 +19,14 @@ public class UserTest {
         assertNotNull(created);
         // 特定のuser が登録できたかチェックするメソッド assert (get or find)
         assertEquals("test_user",repo.find(Integer.valueOf(1)).getName());
+    }
+
+    @Test
+    public void DeleteTest() {
+        User user = new User("test_user_for_delete","test2@example.com");
+        assertFalse(ur.delete(user));
+        User savedUser = ur.save(user);
+        assertNotNull(savedUser);
+        assertTrue(ur.delete(user));
     }
 }
