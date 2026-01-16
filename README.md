@@ -109,3 +109,148 @@ Controller -> Service -> Domain
   - DBStudyRecordRepository
 - Controller 入力の受付
 
+✅ validation の設計
+
+- Controller で例外処理は集約する
+  - あちこちで try catch 増えるのが面倒なので
+- 例外の種類
+  - ValidationException
+  - NotFoundException
+  - DuplicateException
+
+✅ テストケース設計
+
+https://speakerdeck.com/mixi_engineers/2024-new-grad-training-test-and-system-design?slide=6
+この研修資料を参考にテスト設計を行う
+
+テストの知識が皆無なので資料をまとめながら設計を行っていく
+
+#### なぜテストが重要か
+
+ソフトウェア品質を担保するため
+
+ソフトウェアの品質には2種類存在し
+
+- 外部品質特性：ユーザーから見える部分の品質
+- 内部品質特性：ユーザーから見えない内側の品質
+
+テストを中心とした開発手法として TDD があり，テストリストを先に作成して，テストを通すために実装を進めていくやり方
+
+#### TDD の流れ
+1. 網羅したいテストシナリオのリストを作成
+2. テストリストの中から一つだけを選び出し，実際にテストを記述して失敗することをチェック
+3. プロダクトコードを変更して，いま書いたテストを成功させる（この間に,テストリストの変更可能）
+4. リファクタリング
+5. テストリストが完了するまで2に戻って繰り返す
+
+#### テストレベル
+
+- 単体テスト
+- 統合テスト
+- システムテスト
+- 受入テスト
+
+#### テストリストの作成
+**一般的なユースケースとして実現するべき挙動**
+
+- user の登録（Mock）
+- user のログイン（Mock）
+- userId および StudyRecord を渡したときに，Repository にユーザーに対応したレコードとして保存し保存ステータスを返す
+- userId および StudyRecordId を渡したときに, Repository に登録されているレコードを削除して，保存ステータスを返す
+
+**例外的な処理としてはじくべき挙動**
+
+- user の重複登録の場合はエラーを返す
+- user のパスワードが間違った状態でログイン
+- user のName が間違った状態でログイン
+- userId および StudyRecordId を渡したときに, Repostiory に保存されていなければ，エラーをかえす
+
+#### ながれ
+- JUnit 導入
+- CI 最低限整備: lint,PR/Push でテスト自動実行
+- 最初に user を mock で行って, user の登録とログインが通るように実装をすすめる
+- 上記実装完了後に DB 接続を行う
+
+**JUnit 導入**
+build.gradle において
+```aiignore
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+```
+が JUnit を含んでいるので，最初の段階で導入は完了している
+
+**JUnit チェック**
+https://pleiades.io/help/idea/junit.html このページを参考にテストをサンプルで動かしてみる
+
+https://oohira.github.io/junit5-doc-jp/user-guide/#overview JUnit におけるアノテーションはこの書かれているので適宜参照する
+
+#### ナレッジ
+
+**Factory Method** 
+https://qiita.com/takobuta_dev/items/5ec3f67fd4eaf334cffa
+これがわかりやすかった
+
+- コンストラクタにおいてはそのクラスが，引数に記述されたものがないと動けないものを渡す，つまり依存注入の対象になるものはコンストラクタに明示する必要がある
+  - 無駄にコンストラクタの引数に渡してはいけない，最低限に抑える必要がある
+  - **基本的には依存するオブジェクトに関してはコンストラクタで渡すべき**（例外有り）
+  
+例）
+UserRegister クラスは、User の Name と Email を用いてユーザーを登録する責務を持つクラスである。
+
+登録方法として
+① Name・Email をハッシュ化して登録する方法
+② Name・Email を平文のまま登録する方法
+の二通りを考える。
+
+この二つの方法はいずれも「Name と Email を入力として User を登録する」という点では共通しており、Name や Email の値が変わっても UserRegister クラスの処理フローやアルゴリズムそのものは変化しない。
+そのため、Name および Email は UserRegister にとって 入力データであり、依存注入の対象となる「依存関係」には該当しない。よって、これらはメソッド引数として受け取る設計で十分である。
+
+一方で、Encoder の有無によって「ハッシュ化して登録するか」「平文で登録するか」という登録処理の やり方（戦略） が切り替わる。
+このように、Encoder は UserRegister クラスの振る舞いそのものを変更し得る協力オブジェクトであるため、UserRegister は Encoder に依存していると言える。
+
+したがって、Encoder はコンストラクタ引数として受け取り、UserRegister クラスが Encoder に依存していることを明示的に表現すべきである。
+
+なお、広義には UserRegister は Name や Email を用いて処理を行うため「依存している」と捉えることもできるが、本説明における「依存」とは 依存注入（DI）の文脈において、差し替えによって振る舞いが変化する協力オブジェクト を指している。
+この意味において、Name や Email は依存関係には含めていない。
+
+ここでいう振る舞いが変わる：
+アルゴリズムの流れが変わる，失敗時の挙動が変わるなど（ DB , inmemory で登録失敗時の挙動が異なる，データの永続性など）
+
+これらを踏まえると，UserRegister のコンストラクタに User オブジェクトを渡すのは不適であることがわかる
+
+そもそも UserRegister は任意のユーザーを登録する責務があるのにもかかわらず，ここで User オブジェクトをコンストラクタに渡すようにしてしまうと，特定のユーザーに対する登録しかできなくなってしまう．
+そのため責務を果たすことができない
+
+なぜ User をコンストラクタに渡して保持する設計が微妙か」をすごく分かりやすく表してます。
+
+何が起きてるか
+✅ 望ましい形（Serviceは使い回す）
+
+UserRegisterService は **道具（Repository/Encoder）**を持つ
+
+登録したいユーザー（データ）は その都度渡す
+
+流れ：
+
+UserRegisterService を1回だけ作る（DIなら自動で1個）
+
+複数回 register(...) を呼ぶ
+
+❌ 微妙な形（Userをコンストラクタに入れる）
+
+UserRegisterService が ユーザー（データ）を抱える
+
+ユーザーごとに service を作り直す構造になりやすい
+
+流れ：
+
+ユーザーA用に new UserRegisterService(userA, ...) → register
+
+ユーザーB用に new UserRegisterService(userB, ...) → register
+
+…を人数分
+
+あなたが言った通り、本来1回でいい service のインスタンス化が人数分必要になります。
+
+コード書く前に
+https://github.com/jkazama/sample-boot-jpa/tree/master
+を呼んで全体を見る．
