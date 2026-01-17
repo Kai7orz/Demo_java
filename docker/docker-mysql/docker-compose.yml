@@ -1,0 +1,9 @@
+services:
+  db:
+    ports:
+      - "3307:3306"
+    image: mysql
+    ## restart をalways にするとDocker 起動時にコンテナが自動的にたちあがる
+    restart: no
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
