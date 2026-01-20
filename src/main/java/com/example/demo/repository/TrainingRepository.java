@@ -42,6 +42,12 @@ public class TrainingRepository implements TrainingDataRepository {
     }
 
     public TrainingData findAll() {
+//        JdbcTemplate jdbcTemplate = new JdbcTemplate
+//        String name = jdbcTemplate.queryForObject(
+//                "SELECT name FROM training WHERE id=?",Integer.class,1
+//        );
+
+
         // SQL 作成
         // 取得データを Map につめて，TrainingData インスタンスを返す
         Map<Integer,String> mockData = new HashMap<Integer,String>();
