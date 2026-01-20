@@ -1,34 +1,44 @@
 package com.example.demo;
 
-import com.example.demo.model.TrainingData;
-import com.example.demo.repository.MockTrainingRepository;
-import com.example.demo.repository.TrainingDataRepository;
-import com.example.demo.repository.TrainingRepository;
 import com.example.demo.service.TrainingService;
-import com.example.demo.usecase.user.Main;
-import com.example.demo.usecase.user.Monster;
-import com.example.demo.usecase.user.Pocket;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.jdbc.core.JdbcTemplate;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Function;
+import javax.sql.DataSource;
 
 @Configuration
 @ComponentScan
 public class DemoApplication {
 	public static void main(String[] args) {
-		// DataSaurce という Repository と JDBC の間をつなぐクラスを用意.
-		// DataSauce を JDBC を操作するためのクラスにインジェクションする.
-		Function<String,Integer> function = Main::len;
-		System.out.println(function.apply("hello"));
+		// DB 接続後に JDBCTemplate ?
+		// DataSauce を定義
+		// JDBCTemplate へ DataSauce をインジェクション
+		// Repository クラスに JDBCTemplate をインジェクションする
+		// JDBCTemplate を利用してSQL を発行し，データを取得するメソッドを　Repository が実装する
+		// JDBCTemplate をインジェクションできるようにする
+		// SQL 発行 queryForObject メソッドを利用する
+		ApplicationContext context = new AnnotationConfigApplicationContext(DemoApplication.class);
+		TrainingService trainingService = context.getBean(TrainingService.class);
+		trainingService.displayTrainingData();
+	}
+
+	@Bean
+	public DataSource dataSource() {
+		HikariDataSource dataSource = new HikariDataSource();
+		dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+		dataSource.setJdbcUrl("jdbc:mySQL://127.0.0.1:3307/train");
+		dataSource.setUsername("root");
+		dataSource.setPassword("root_password");
+		return dataSource;
+	}
+
+	@Bean
+	public JdbcTemplate jdbcTemplate(DataSource dataSource) {
+		return new JdbcTemplate(dataSource);
 	}
 }
