@@ -1,7 +1,5 @@
 package com.example.demo.model;
 
-import com.example.demo.usecase.user.TrainingService;
-
 public class Training {
     private String trainingName = "test";
 

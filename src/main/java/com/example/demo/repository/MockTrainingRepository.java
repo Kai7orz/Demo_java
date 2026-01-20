@@ -8,8 +8,6 @@ import org.springframework.stereotype.Repository;
 import java.util.HashMap;
 import java.util.Map;
 
-@Repository
-@Profile("staging")
 public class MockTrainingRepository implements TrainingDataRepository{
     private TrainingData td;
     public MockTrainingRepository() {
