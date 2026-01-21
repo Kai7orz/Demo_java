@@ -15,13 +15,7 @@ import javax.sql.DataSource;
 @ComponentScan
 public class DemoApplication {
 	public static void main(String[] args) {
-		// DB 接続後に JDBCTemplate ?
-		// DataSauce を定義
-		// JDBCTemplate へ DataSauce をインジェクション
-		// Repository クラスに JDBCTemplate をインジェクションする
-		// JDBCTemplate を利用してSQL を発行し，データを取得するメソッドを　Repository が実装する
-		// JDBCTemplate をインジェクションできるようにする
-		// SQL 発行 queryForObject メソッドを利用する
+
 		ApplicationContext context = new AnnotationConfigApplicationContext(DemoApplication.class);
 		TrainingService trainingService = context.getBean(TrainingService.class);
 		trainingService.displayTrainingData();
